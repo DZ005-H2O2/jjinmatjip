@@ -1,0 +1,17 @@
+name = "jjinmatjip-api"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+
+# KV 네임스페이스 생성 후 id를 채워주세요:
+#   npx wrangler kv namespace create KV
+[[kv_namespaces]]
+binding = "KV"
+id = "PASTE_KV_NAMESPACE_ID_HERE"
+
+[vars]
+# 배포 후 실제 GitHub Pages 주소로 교체 (쉼표로 여러 개)
+ALLOWED_ORIGINS = "http://localhost:5173,https://USERNAME.github.io"
+
+# 시크릿 (npx wrangler secret put <이름> 으로 등록):
+#   NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, ANTHROPIC_API_KEY, APP_PASSWORD
+# 로컬 개발용은 .dev.vars 파일에 작성 (.dev.vars.example 참고)

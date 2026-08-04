@@ -1,0 +1,12 @@
+{
+  "name": "찐맛집",
+  "short_name": "찐맛집",
+  "description": "우리 둘의 찐맛집 탐색기",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ff6b4a",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
