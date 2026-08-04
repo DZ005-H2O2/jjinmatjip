@@ -41,10 +41,27 @@ function handleResults(resolve, reject) {
   };
 }
 
-export function searchPlaces(keyword) {
+// near가 있으면 그 위치 반경 20km 내 결과를 우선 (데이트 중 "파스타"만 쳐도 근처가 나오게)
+export function searchPlaces(keyword, near) {
   return new Promise((resolve, reject) => {
     const ps = new kakao.maps.services.Places();
-    ps.keywordSearch(keyword, handleResults(resolve, reject), { size: 15 });
+    const opts = { size: 15 };
+    if (near) {
+      opts.location = new kakao.maps.LatLng(near.lat, near.lng);
+      opts.radius = 20000;
+    }
+    ps.keywordSearch(
+      keyword,
+      (data, status) => {
+        // 반경 내 결과가 없으면 전국 검색으로 폴백
+        if (near && status === kakao.maps.services.Status.ZERO_RESULT) {
+          ps.keywordSearch(keyword, handleResults(resolve, reject), { size: 15 });
+        } else {
+          handleResults(resolve, reject)(data, status);
+        }
+      },
+      opts,
+    );
   });
 }
 

@@ -255,6 +255,23 @@ body {
   padding: 12px 0;
   font-size: 15px;
 }
+.recent-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.recent-chip {
+  display: inline-block;
+  margin: 3px;
+  padding: 7px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #fff;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+}
 
 /* ── 리스트 ── */
 .place-row {

@@ -113,17 +113,52 @@ function setAnalyzeStatus(kind, text) {
   }
 }
 
+// ── 최근 검색어 ─────────────────────────────────────────────
+const RECENT_KEY = "jjin.recent";
+
+function getRecent() {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_KEY)) || [];
+  } catch {
+    return [];
+  }
+}
+
+function pushRecent(keyword) {
+  const list = [keyword, ...getRecent().filter((k) => k !== keyword)].slice(0, 6);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(list));
+}
+
+function renderEmptyPanel() {
+  const el = document.getElementById("sheet-empty");
+  const recent = getRecent();
+  if (!recent.length) {
+    el.textContent = "지역과 키워드로 검색해보세요 🍜";
+    return;
+  }
+  el.innerHTML =
+    `<div class="recent-label">최근 검색</div>` +
+    recent.map((k) => `<button type="button" class="recent-chip">${k.replace(/</g, "&lt;")}</button>`).join("");
+  el.querySelectorAll(".recent-chip").forEach((b) =>
+    b.addEventListener("click", () => {
+      document.getElementById("search-input").value = b.textContent;
+      onSearch(b.textContent);
+    }),
+  );
+}
+
 // ── 검색 → 분석 파이프라인 ──────────────────────────────────
 async function onSearch(keyword) {
   showPanel("empty");
   document.getElementById("sheet-empty").textContent = "검색중… 🔎";
   let found;
   try {
-    found = await searchPlaces(keyword);
+    found = await searchPlaces(keyword, userPos);
   } catch {
     toast("장소 검색에 실패했어요");
     return;
   }
+  pushRecent(keyword);
   presentResults(found, { fit: true });
 }
 
@@ -142,6 +177,7 @@ async function onAreaSearch() {
 
 function presentResults(found, { fit }) {
   places = found;
+  sortMode = "default";
   if (!places.length) {
     document.getElementById("sheet-empty").textContent = "이 지역엔 결과가 없어요 😢";
     showPanel("empty");
@@ -238,10 +274,13 @@ async function toggleFav(place) {
       id: place.id,
       name: place.name,
       address: place.address,
+      region: place.region,
+      category: place.category,
       url: place.url,
       x: place.x,
       y: place.y,
       jjin_score: place.jjin_score,
+      verdict: place.verdict,
       addedAt: new Date().toISOString(),
     });
   }
@@ -299,6 +338,7 @@ async function boot() {
     return;
   }
   initMap();
+  renderEmptyPanel();
   await ensureAuth();
 
   document.getElementById("search-form").addEventListener("submit", (e) => {
