@@ -2,15 +2,25 @@ name = "jjinmatjip-api"
 main = "src/index.js"
 compatibility_date = "2026-08-01"
 
+# Claude 호출은 미국 고정 Durable Object(LlmRelay)를 경유 —
+# 한국발 무료 트래픽이 실행되는 홍콩 콜로 IP를 Anthropic이 차단하기 때문.
+[[durable_objects.bindings]]
+name = "LLM_DO"
+class_name = "LlmRelay"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["LlmRelay"]
+
 # KV 네임스페이스 생성 후 id를 채워주세요:
 #   npx wrangler kv namespace create KV
 [[kv_namespaces]]
 binding = "KV"
-id = "PASTE_KV_NAMESPACE_ID_HERE"
+id = "7f614a2dbbd94b808f8ac77594e39836"
 
 [vars]
 # 배포 후 실제 GitHub Pages 주소로 교체 (쉼표로 여러 개)
-ALLOWED_ORIGINS = "http://localhost:5173,https://USERNAME.github.io"
+ALLOWED_ORIGINS = "http://localhost:5173,https://dz005-h2o2.github.io"
 
 # 시크릿 (npx wrangler secret put <이름> 으로 등록):
 #   NAVER_CLIENT_ID, NAVER_CLIENT_SECRET, ANTHROPIC_API_KEY, APP_PASSWORD

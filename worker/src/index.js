@@ -1,6 +1,8 @@
 import { handleAnalyze } from "./analyze.js";
 import { getFavorites, putFavorites } from "./favorites.js";
 
+export { LlmRelay } from "./llmRelay.js";
+
 function corsHeaders(request, env) {
   const origin = request.headers.get("Origin") || "";
   const allowed = (env.ALLOWED_ORIGINS || "").split(",").map((s) => s.trim());

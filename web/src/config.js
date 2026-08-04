@@ -8,4 +8,4 @@ export const KAKAO_JS_KEY = "edde2f9425b4823e80c0dcda0f2f13b7";
 // 배포된 Cloudflare Worker 주소 (예: "https://jjinmatjip-api.xxx.workers.dev").
 // 비워두면: 로컬 개발에서는 vite 프록시(/api → localhost:8787)를 사용하고,
 // 배포 환경에서는 분석/찜 기능 없이 지도 검색만 동작합니다.
-export const WORKER_URL = "";
+export const WORKER_URL = "https://jjinmatjip-api.jjinmatjip-api.workers.dev";

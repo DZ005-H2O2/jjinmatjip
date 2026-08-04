@@ -1,10 +1,10 @@
-import Anthropic from "@anthropic-ai/sdk";
 import { searchBlogs } from "./naver.js";
 import { getCached, putCached } from "./cache.js";
 import { mockResult } from "./mock.js";
 
 const MODEL = "claude-haiku-4-5";
 const MAX_PLACES = 10;
+
 
 const SYSTEM_PROMPT = `You are a Korean restaurant review analyst. You receive Naver blog
 search snippets (title + description + postdate) for several restaurants. For each
@@ -76,18 +76,16 @@ function buildUserContent(placesWithPosts) {
 }
 
 async function callClaude(placesWithPosts, env) {
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY });
-  const response = await client.messages.create({
+  // 미국 리전 DO를 통해 호출 (llmRelay.js 참고)
+  const stub = env.LLM_DO.get(env.LLM_DO.idFromName("us-relay"), { locationHint: "enam" });
+  const { text, usage } = await stub.createMessage({
     model: MODEL,
     max_tokens: 4096,
     system: SYSTEM_PROMPT,
     output_config: { format: { type: "json_schema", schema: OUTPUT_SCHEMA } },
     messages: [{ role: "user", content: buildUserContent(placesWithPosts) }],
   });
-  console.log(
-    `claude usage: in=${response.usage.input_tokens} out=${response.usage.output_tokens}`,
-  );
-  const text = response.content.find((b) => b.type === "text")?.text ?? "{}";
+  console.log(`claude usage: in=${usage.input_tokens} out=${usage.output_tokens}`);
   return JSON.parse(text).results || [];
 }
 

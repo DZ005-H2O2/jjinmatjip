@@ -1,10 +1,13 @@
 name: Deploy Cloudflare Worker
 
+# 현재는 로컬에서 `npx wrangler deploy`로 수동 배포 중.
+# 자동 배포를 원하면 레포 시크릿에 CLOUDFLARE_API_TOKEN을 등록하고
+# 아래 push 트리거의 주석을 해제하세요.
 on:
-  push:
-    branches: [main]
-    paths: ["worker/**", ".github/workflows/deploy-worker.yml"]
   workflow_dispatch:
+  # push:
+  #   branches: [main]
+  #   paths: ["worker/**", ".github/workflows/deploy-worker.yml"]
 
 jobs:
   deploy:
