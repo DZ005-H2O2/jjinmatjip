@@ -24,10 +24,13 @@ worker/  # 백엔드 — Cloudflare Worker (네이버 블로그검색 + Claude �
    - `https://<깃헙아이디>.github.io`
 4. 카카오맵 사용 설정: 제품 설정 > 카카오맵 > 활성화
 
-### 2. 네이버 (블로그 검색) — 무료 25,000회/일
-1. https://developers.naver.com → Application → 애플리케이션 등록
-2. 사용 API: **검색** 선택, 환경: WEB (주소는 아무거나, 서버에서만 호출함)
-3. Client ID / Client Secret → Worker 시크릿으로 등록 (아래)
+### 2. 네이버 블로그 검색 — NAVER API HUB (현재 무료, 월 77.5만건)
+구 개발자센터 검색 API가 네이버클라우드 "NAVER API HUB"로 이관됨 (2026).
+1. https://www.ncloud.com 가입 후 마이페이지 > 결제 정보 관리에서 결제수단 등록
+   (한시적 무료 제공 중이며 유료 전환 시 사전 공지됨)
+2. 콘솔(console.ncloud.com) → Services → Application Services → **NAVER API HUB**
+   → 이용 신청 → Application 등록
+3. Application의 **인증 정보**에서 Client ID / Client Secret 확인 → Worker 시크릿으로 등록 (아래)
 
 ### 3. Cloudflare (Worker + KV) — 무료
 1. https://dash.cloudflare.com 가입

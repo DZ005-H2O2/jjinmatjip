@@ -1,6 +1,7 @@
 # 이 파일을 .dev.vars 로 복사하고 실제 값을 채우세요 (.dev.vars는 git에 커밋되지 않음)
-NAVER_CLIENT_ID=your_naver_client_id
-NAVER_CLIENT_SECRET=your_naver_client_secret
+# NAVER API HUB (네이버클라우드 콘솔 > NAVER API HUB > Application의 인증 정보)
+NAVER_CLIENT_ID=your_apihub_client_id
+NAVER_CLIENT_SECRET=your_apihub_client_secret
 ANTHROPIC_API_KEY=sk-ant-...
 APP_PASSWORD=우리끼리암호
 

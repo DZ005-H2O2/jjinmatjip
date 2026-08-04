@@ -1,4 +1,5 @@
-// 네이버 블로그 검색 API — 장소별 후기 스니펫 수집
+// 네이버 블로그 검색 — NAVER API HUB (네이버클라우드) 경유
+// 구 developers.naver.com 오픈 API가 API HUB로 이관됨 (2026 기준, 한시적 무료)
 
 function stripTags(s) {
   return (s || "")
@@ -12,13 +13,13 @@ function stripTags(s) {
 export async function searchBlogs(place, env) {
   const query = `${place.name} ${place.region || ""}`.trim();
   const url =
-    "https://openapi.naver.com/v1/search/blog.json?" +
-    new URLSearchParams({ query, display: "5", sort: "sim" });
+    "https://naverapihub.apigw.ntruss.com/search/v1/blog?" +
+    new URLSearchParams({ query, display: "5", sort: "sim", format: "json" });
 
   const res = await fetch(url, {
     headers: {
-      "X-Naver-Client-Id": env.NAVER_CLIENT_ID,
-      "X-Naver-Client-Secret": env.NAVER_CLIENT_SECRET,
+      "X-NCP-APIGW-API-KEY-ID": env.NAVER_CLIENT_ID,
+      "X-NCP-APIGW-API-KEY": env.NAVER_CLIENT_SECRET,
     },
   });
   if (!res.ok) {
