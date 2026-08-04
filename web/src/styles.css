@@ -243,6 +243,9 @@ body,
 }
 
 /* ── 비밀번호 게이트 ── */
+#pw-gate[hidden] {
+  display: none;
+}
 #pw-gate {
   position: absolute;
   inset: 0;
