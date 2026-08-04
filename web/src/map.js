@@ -28,6 +28,7 @@ export function getMap() {
 }
 
 function scoreClass(place) {
+  if (place._fav && place.jjin_score == null) return "fav";
   if (place.verdict === "정보부족") return "gray";
   if (place.jjin_score == null) return "pending";
   if (place.jjin_score >= 70) return "green";
@@ -36,6 +37,7 @@ function scoreClass(place) {
 }
 
 function pillLabel(place) {
+  if (place._fav) return place.jjin_score != null ? `♥${place.jjin_score}` : "♥";
   if (place.verdict === "정보부족") return "?";
   if (place.jjin_score == null) return "…";
   return String(place.jjin_score);
@@ -74,4 +76,19 @@ export function updateMarker(place) {
 
 export function panTo(place) {
   map.panTo(new kakao.maps.LatLng(place.y, place.x));
+}
+
+// 내 위치 파란 점 표시 + 이동
+let userOverlay = null;
+export function showUserLocation(lat, lng) {
+  const pos = new kakao.maps.LatLng(lat, lng);
+  if (!userOverlay) {
+    const el = document.createElement("div");
+    el.className = "user-dot";
+    userOverlay = new kakao.maps.CustomOverlay({ position: pos, content: el });
+  }
+  userOverlay.setPosition(pos);
+  userOverlay.setMap(map);
+  map.setLevel(4);
+  map.panTo(pos);
 }

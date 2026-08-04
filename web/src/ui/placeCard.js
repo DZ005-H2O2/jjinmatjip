@@ -14,17 +14,52 @@ export function verdictChip(place) {
   return `<span class="chip ${cls}">${esc(place.verdict)}${score}</span>`;
 }
 
-export function renderList(places, { onSelect, isFav }) {
+// 현위치 기준 거리 표기 ("📍350m (도보 5분)")
+function distText(p, from) {
+  if (!from || !p.x || !p.y) return "";
+  const toRad = (d) => (d * Math.PI) / 180;
+  const R = 6371e3;
+  const dLat = toRad(p.y - from.lat);
+  const dLon = toRad(p.x - from.lng);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(from.lat)) * Math.cos(toRad(p.y)) * Math.sin(dLon / 2) ** 2;
+  const m = 2 * R * Math.asin(Math.sqrt(a));
+  const dist = m < 1000 ? `${Math.round(m)}m` : `${(m / 1000).toFixed(1)}km`;
+  const walk = m < 2500 ? ` 도보${Math.max(1, Math.round(m / 67))}분` : "";
+  return `📍${dist}${walk} · `;
+}
+
+export function renderList(places, { onSelect, isFav, sort = "default", onSortChange, from }) {
   const root = document.getElementById("place-list");
   root.innerHTML = "";
-  for (const p of places) {
+
+  const controls = document.createElement("div");
+  controls.className = "list-controls";
+  controls.innerHTML = `
+    <span class="count">${places.length}곳</span>
+    <div class="sort-toggle">
+      <button type="button" data-sort="default" class="${sort === "default" ? "on" : ""}">기본순</button>
+      <button type="button" data-sort="score" class="${sort === "score" ? "on" : ""}">찐점수순</button>
+    </div>`;
+  controls.querySelectorAll("button").forEach((b) =>
+    b.addEventListener("click", () => onSortChange?.(b.dataset.sort)),
+  );
+  root.appendChild(controls);
+
+  const sorted =
+    sort === "score"
+      ? [...places].sort((a, b) => (b.jjin_score ?? -1) - (a.jjin_score ?? -1))
+      : places;
+
+  for (const p of sorted) {
     const row = document.createElement("div");
     row.className = "place-row";
     row.dataset.id = p.id;
     row.innerHTML = `
       <div class="row-main">
         <div class="row-title">${esc(p.name)} ${isFav(p.id) ? "❤️" : ""}</div>
-        <div class="row-sub">${esc(p.category)} · ${esc(p.address)}</div>
+        <div class="row-sub">${distText(p, from)}${esc(p.category)} · ${esc(p.address)}</div>
       </div>
       <div class="row-badge">${verdictChip(p)}</div>`;
     row.addEventListener("click", () => onSelect(p));

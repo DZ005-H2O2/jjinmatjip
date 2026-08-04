@@ -1,4 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <rect width="512" height="512" rx="112" fill="#ff6b4a"/>
-  <text x="256" y="330" font-size="240" text-anchor="middle" font-family="sans-serif">🍜</text>
+  <!-- 김이 나는 국수 그릇 -->
+  <path d="M96 268h320a160 152 0 0 1-320 0z" fill="#ffffff"/>
+  <path d="M96 268h320v14a160 152 0 0 1-14 52H124a160 152 0 0 1-24-52z" fill="#ffe8e2" opacity="0.9"/>
+  <!-- 면발 -->
+  <path d="M140 240c14-12 30-12 44 0s30 12 44 0 30-12 44 0 30 12 44 0 30-12 44 0" fill="none" stroke="#ff8f73" stroke-width="16" stroke-linecap="round"/>
+  <!-- 젓가락 -->
+  <rect x="316" y="76" width="18" height="150" rx="9" fill="#ffffff" transform="rotate(24 325 151)"/>
+  <rect x="356" y="86" width="18" height="140" rx="9" fill="#ffffff" transform="rotate(30 365 156)"/>
+  <!-- 김 -->
+  <path d="M170 128c-10 20 10 26 0 46m66-56c-10 20 10 26 0 46" fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round" opacity="0.85"/>
+  <!-- 하트 포인트 -->
+  <path d="M256 330c-10-14-34-12-34 6 0 14 20 24 34 34 14-10 34-20 34-34 0-18-24-20-34-6z" fill="#ff6b4a"/>
 </svg>

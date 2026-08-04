@@ -8,7 +8,15 @@ import {
   analyzePlaces,
   deepAnalyze,
 } from "./api.js";
-import { loadKakaoSdk, initMap, getMap, renderMarkers, updateMarker, panTo } from "./map.js";
+import {
+  loadKakaoSdk,
+  initMap,
+  getMap,
+  renderMarkers,
+  updateMarker,
+  panTo,
+  showUserLocation,
+} from "./map.js";
 import { searchPlaces, searchPlacesInBounds } from "./search.js";
 import { initSheet, setState, showPanel } from "./ui/bottomSheet.js";
 import {
@@ -20,8 +28,24 @@ import {
 
 let places = [];
 let favorites = [];
+let sortMode = "default"; // "default" | "score"
+let userPos = null; // { lat, lng }
+let lastTargets = null; // 분석 실패 시 재시도용
 
 const isFav = (id) => favorites.some((f) => f.id === id);
+
+function renderPlaceList() {
+  renderList(places, {
+    onSelect: openDetail,
+    isFav,
+    sort: sortMode,
+    onSortChange: (m) => {
+      sortMode = m;
+      renderPlaceList();
+    },
+    from: userPos,
+  });
+}
 
 function toast(msg) {
   const el = document.getElementById("toast");
@@ -124,13 +148,14 @@ function presentResults(found, { fit }) {
     return;
   }
   renderMarkers(places, openDetail, { fit });
-  renderList(places, { onSelect: openDetail, isFav });
+  renderPlaceList();
   showPanel("list");
   setState("half");
   if (hasWorker) runAnalysis(places.slice(0, 10));
 }
 
 async function runAnalysis(targets) {
+  lastTargets = targets;
   setAnalyzeStatus("analyzing", `⏳ 블로그 후기 분석중… (${targets.length}곳, 5~15초)`);
   try {
     const { results } = await analyzePlaces(
@@ -141,22 +166,22 @@ async function runAnalysis(targets) {
       if (!r) continue;
       Object.assign(p, r);
       updateMarker(p);
-      updateListRow(p, isFav);
     }
+    renderPlaceList(); // 점수 반영 + 정렬 갱신
     // 상세 화면이 열려있으면 갱신
     const detail = document.getElementById("place-detail");
     if (!detail.hidden && detail.dataset.id) {
       const p = places.find((x) => x.id === detail.dataset.id);
       if (p) openDetail(p);
     }
-    setAnalyzeStatus("done", "✅ 분석 완료 — 점수를 눌러 자세히 보세요");
+    setAnalyzeStatus("done", "✅ 분석 완료 — 찐점수순으로 정렬해보세요");
   } catch (e) {
-    setAnalyzeStatus(null);
     if (e.code === 401) {
+      setAnalyzeStatus(null);
       await ensureAuth();
       return runAnalysis(targets);
     }
-    toast("후기 분석에 실패했어요 — 다시 검색해보세요");
+    setAnalyzeStatus("error", "⚠️ 후기 분석 실패 — 여기를 눌러 재시도");
   }
 }
 
@@ -165,11 +190,12 @@ function openDetail(place) {
   panTo(place);
   // 목록 밖(찜에서 진입)이면 places에 없을 수 있음
   const p = places.find((x) => x.id === place.id) || place;
-  document.getElementById("place-detail").dataset.id = p.id;
+  const el = document.getElementById("place-detail");
+  // 안드로이드 뒤로가기로 목록에 돌아올 수 있게 히스토리에 쌓기 (재렌더 시 중복 방지)
+  if (el.hidden) history.pushState({ panel: "detail" }, "");
+  el.dataset.id = p.id;
   renderDetail(p, {
-    onBack: () => {
-      showPanel(places.length ? "list" : "empty");
-    },
+    onBack: () => history.back(),
     onToggleFav: toggleFav,
     isFav,
     workerAvailable: hasWorker,
@@ -241,6 +267,12 @@ async function openFavList() {
       return openFavList();
     }
   }
+  if (document.getElementById("fav-list").hidden) {
+    history.pushState({ panel: "fav" }, "");
+  }
+  // 찜한 곳들을 지도에 ♥ 마커로 표시
+  const favMarkers = favorites.filter((f) => f.x && f.y).map((f) => ({ ...f, _fav: true }));
+  if (favMarkers.length) renderMarkers(favMarkers, openDetail, { fit: true });
   renderFavList(favorites, {
     onSelect: (f) => openDetail(f),
     onRemove: async (f) => {
@@ -277,6 +309,47 @@ async function boot() {
   });
   document.getElementById("fav-btn").addEventListener("click", openFavList);
   document.getElementById("area-search-btn").addEventListener("click", onAreaSearch);
+  document.getElementById("locate-btn").addEventListener("click", onLocate);
+  document.getElementById("analyze-status").addEventListener("click", (e) => {
+    if (e.target.className === "error" && lastTargets) runAnalysis(lastTargets);
+  });
+
+  // 안드로이드 뒤로가기: 상세/찜 화면이면 목록으로 (앱 종료 방지)
+  window.addEventListener("popstate", () => {
+    const detailVisible = !document.getElementById("place-detail").hidden;
+    const favVisible = !document.getElementById("fav-list").hidden;
+    if (!detailVisible && !favVisible) return;
+    if (favVisible || detailVisible) {
+      // 찜 화면에서 나올 때는 검색 마커 복원
+      if (places.length) {
+        renderMarkers(places, openDetail, { fit: false });
+        showPanel("list");
+        setState("half");
+      } else {
+        showPanel("empty");
+        setState("peek");
+      }
+    }
+  });
+}
+
+// ── 내 위치 ─────────────────────────────────────────────────
+function onLocate() {
+  if (!navigator.geolocation) {
+    toast("이 브라우저는 위치를 지원하지 않아요");
+    return;
+  }
+  toast("내 위치 찾는 중… 📍");
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      userPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      showUserLocation(userPos.lat, userPos.lng);
+      if (places.length) renderPlaceList(); // 거리 표시 갱신
+      toast("파란 점이 내 위치예요 — 🔄 이 지역에서 검색을 눌러보세요");
+    },
+    () => toast("위치 접근을 허용해주세요 (브라우저 설정)"),
+    { enableHighAccuracy: true, timeout: 8000 },
+  );
 }
 
 boot();
