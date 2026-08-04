@@ -7,8 +7,8 @@ import {
   saveFavorites,
   analyzePlaces,
 } from "./api.js";
-import { loadKakaoSdk, initMap, renderMarkers, updateMarker, panTo } from "./map.js";
-import { searchPlaces } from "./search.js";
+import { loadKakaoSdk, initMap, getMap, renderMarkers, updateMarker, panTo } from "./map.js";
+import { searchPlaces, searchPlacesInBounds } from "./search.js";
 import { initSheet, setState, showPanel } from "./ui/bottomSheet.js";
 import {
   renderList,
@@ -72,30 +72,65 @@ function promptPassword(showError) {
   });
 }
 
+// ── 분석 상태 표시 ──────────────────────────────────────────
+function setAnalyzeStatus(kind, text) {
+  const el = document.getElementById("analyze-status");
+  clearTimeout(setAnalyzeStatus._t);
+  if (!kind) {
+    el.hidden = true;
+    return;
+  }
+  el.hidden = false;
+  el.className = kind;
+  el.textContent = text;
+  if (kind === "done") {
+    setAnalyzeStatus._t = setTimeout(() => (el.hidden = true), 3000);
+  }
+}
+
 // ── 검색 → 분석 파이프라인 ──────────────────────────────────
 async function onSearch(keyword) {
   showPanel("empty");
   document.getElementById("sheet-empty").textContent = "검색중… 🔎";
+  let found;
   try {
-    places = await searchPlaces(keyword);
+    found = await searchPlaces(keyword);
   } catch {
     toast("장소 검색에 실패했어요");
     return;
   }
-  if (!places.length) {
-    document.getElementById("sheet-empty").textContent = "검색 결과가 없어요 😢";
+  presentResults(found, { fit: true });
+}
+
+// 지도를 움직인 뒤 현재 화면 범위에서 재검색 (키워드 없으면 음식점 전체)
+async function onAreaSearch() {
+  const keyword = document.getElementById("search-input").value.trim();
+  let found;
+  try {
+    found = await searchPlacesInBounds(keyword, getMap().getBounds());
+  } catch {
+    toast("장소 검색에 실패했어요");
     return;
   }
+  presentResults(found, { fit: false });
+}
 
-  renderMarkers(places, openDetail);
+function presentResults(found, { fit }) {
+  places = found;
+  if (!places.length) {
+    document.getElementById("sheet-empty").textContent = "이 지역엔 결과가 없어요 😢";
+    showPanel("empty");
+    return;
+  }
+  renderMarkers(places, openDetail, { fit });
   renderList(places, { onSelect: openDetail, isFav });
   showPanel("list");
   setState("half");
-
   if (hasWorker) runAnalysis(places.slice(0, 10));
 }
 
 async function runAnalysis(targets) {
+  setAnalyzeStatus("analyzing", `⏳ 블로그 후기 분석중… (${targets.length}곳, 5~15초)`);
   try {
     const { results } = await analyzePlaces(
       targets.map((p) => ({ id: p.id, name: p.name, region: p.region })),
@@ -113,7 +148,9 @@ async function runAnalysis(targets) {
       const p = places.find((x) => x.id === detail.dataset.id);
       if (p) openDetail(p);
     }
+    setAnalyzeStatus("done", "✅ 분석 완료 — 점수를 눌러 자세히 보세요");
   } catch (e) {
+    setAnalyzeStatus(null);
     if (e.code === 401) {
       await ensureAuth();
       return runAnalysis(targets);
@@ -219,6 +256,7 @@ async function boot() {
     document.getElementById("search-input").blur();
   });
   document.getElementById("fav-btn").addEventListener("click", openFavList);
+  document.getElementById("area-search-btn").addEventListener("click", onAreaSearch);
 }
 
 boot();

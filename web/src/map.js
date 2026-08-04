@@ -46,7 +46,7 @@ export function clearMarkers() {
   overlays.clear();
 }
 
-export function renderMarkers(places, onTap) {
+export function renderMarkers(places, onTap, { fit = true } = {}) {
   clearMarkers();
   const bounds = new kakao.maps.LatLngBounds();
   for (const p of places) {
@@ -60,7 +60,7 @@ export function renderMarkers(places, onTap) {
     ov.setMap(map);
     overlays.set(p.id, ov);
   }
-  if (places.length) map.setBounds(bounds);
+  if (fit && places.length) map.setBounds(bounds);
 }
 
 // 분석 결과 도착 시 해당 마커만 갱신

@@ -75,7 +75,12 @@ export function renderDetail(place, { onBack, onToggleFav, isFav, workerAvailabl
     <div class="detail-meta">${verdictChip(place)} <span class="muted">${esc(place.category)}</span></div>
     <p class="muted">${esc(place.address)}${place.phone ? " · " + esc(place.phone) : ""}</p>
     ${analysis}
-    <a class="kakao-link" href="${esc(place.url)}" target="_blank" rel="noopener">카카오맵에서 보기 ↗</a>`;
+    <div class="ext-links">
+      <a class="ext-link kakao" href="${esc(place.url)}" target="_blank" rel="noopener">카카오맵 리뷰 ↗</a>
+      <a class="ext-link naver" href="https://map.naver.com/p/search/${encodeURIComponent(
+        `${place.name} ${place.region || ""}`.trim(),
+      )}" target="_blank" rel="noopener">네이버지도 리뷰 ↗</a>
+    </div>`;
 
   root.querySelector(".back-btn").addEventListener("click", onBack);
   root.querySelector(".fav-toggle").addEventListener("click", (e) => {
