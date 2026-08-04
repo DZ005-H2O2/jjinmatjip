@@ -262,7 +262,31 @@ body,
   color: #fff;
 }
 .blog-tag.ad { background: var(--red); }
+.blog-tag.ad.certain { outline: 2px solid #7f1d1d; }
 .blog-tag.real { background: var(--green); }
+
+#deep-btn {
+  display: block;
+  width: 100%;
+  margin-top: 12px;
+  padding: 11px 0;
+  border: 1.5px dashed var(--accent);
+  background: #fff7f5;
+  color: var(--accent);
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+}
+#deep-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+.deep-done {
+  margin-top: 10px;
+  font-weight: 600;
+  color: var(--green);
+}
 .blog-title {
   overflow: hidden;
   text-overflow: ellipsis;

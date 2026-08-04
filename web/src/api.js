@@ -60,3 +60,11 @@ export function analyzePlaces(places) {
     body: JSON.stringify({ places }),
   });
 }
+
+// 한 곳만 블로그 본문까지 정밀 분석
+export function deepAnalyze(place) {
+  return request("/api/deep", {
+    method: "POST",
+    body: JSON.stringify({ place: { id: place.id, name: place.name, region: place.region } }),
+  });
+}

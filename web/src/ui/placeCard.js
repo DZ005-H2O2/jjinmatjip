@@ -41,17 +41,29 @@ export function updateListRow(place, isFav) {
   }
 }
 
-export function renderDetail(place, { onBack, onToggleFav, isFav, workerAvailable }) {
+export function renderDetail(place, { onBack, onToggleFav, isFav, workerAvailable, onDeep }) {
   const root = document.getElementById("place-detail");
+  const isDeep = place.source === "fulltext";
   const blogs = (place.blogs || [])
-    .map(
-      (b) => `
+    .map((b) => {
+      const tag = b.certain
+        ? `<span class="blog-tag ad certain" title="${esc(b.why || "")}">광고✓</span>`
+        : b.is_ad
+          ? `<span class="blog-tag ad">광고?</span>`
+          : `<span class="blog-tag real">내돈내산${b.fulltext ? "✓" : "?"}</span>`;
+      return `
       <a class="blog-row" href="${esc(b.link)}" target="_blank" rel="noopener">
-        <span class="blog-tag ${b.is_ad ? "ad" : "real"}">${b.is_ad ? "광고?" : "내돈내산?"}</span>
+        ${tag}
         <span class="blog-title">${esc(b.title)}</span>
-      </a>`,
-    )
+      </a>`;
+    })
     .join("");
+
+  const deepSection = !place.verdict
+    ? ""
+    : isDeep
+      ? `<p class="muted deep-done">🔬 블로그 본문까지 정밀 분석된 결과예요</p>`
+      : `<button id="deep-btn" type="button">🔬 본문까지 정밀 분석 (협찬 배너·공지 탐지)</button>`;
 
   const analysis = !workerAvailable
     ? `<p class="muted">분석 서버 미설정 — 지도 검색만 가능해요</p>`
@@ -61,10 +73,11 @@ export function renderDetail(place, { onBack, onToggleFav, isFav, workerAvailabl
         <p class="summary">${esc(place.summary || "")}</p>
         ${
           place.ad_count != null
-            ? `<p class="muted">내돈내산 추정 ${place.real_count}건 · 광고 추정 ${place.ad_count}건</p>`
+            ? `<p class="muted">내돈내산 ${isDeep ? "" : "추정 "}${place.real_count}건 · 광고 ${isDeep ? "" : "추정 "}${place.ad_count}건</p>`
             : ""
         }
-        ${blogs ? `<div class="blog-list">${blogs}</div><p class="muted src">출처: 네이버 블로그 검색</p>` : ""}`;
+        ${blogs ? `<div class="blog-list">${blogs}</div><p class="muted src">출처: 네이버 블로그 검색</p>` : ""}
+        ${deepSection}`;
 
   root.innerHTML = `
     <div class="detail-head">
@@ -87,6 +100,14 @@ export function renderDetail(place, { onBack, onToggleFav, isFav, workerAvailabl
     onToggleFav(place);
     e.target.textContent = isFav(place.id) ? "❤️" : "🤍";
   });
+  const deepBtn = root.querySelector("#deep-btn");
+  if (deepBtn && onDeep) {
+    deepBtn.addEventListener("click", () => {
+      deepBtn.disabled = true;
+      deepBtn.textContent = "🔬 본문 읽는 중… (10초 내외)";
+      onDeep(place);
+    });
+  }
 }
 
 export function renderFavList(favorites, { onSelect, onRemove }) {

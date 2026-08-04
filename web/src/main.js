@@ -6,6 +6,7 @@ import {
   fetchFavorites,
   saveFavorites,
   analyzePlaces,
+  deepAnalyze,
 } from "./api.js";
 import { loadKakaoSdk, initMap, getMap, renderMarkers, updateMarker, panTo } from "./map.js";
 import { searchPlaces, searchPlacesInBounds } from "./search.js";
@@ -172,12 +173,31 @@ function openDetail(place) {
     onToggleFav: toggleFav,
     isFav,
     workerAvailable: hasWorker,
+    onDeep: runDeepAnalysis,
   });
   showPanel("detail");
   setState("full");
 
   // 11~15위 등 미분석 장소는 탭 시 지연 분석
   if (hasWorker && !p.verdict && p.region !== undefined) runAnalysis([p]);
+}
+
+async function runDeepAnalysis(place) {
+  try {
+    const { result } = await deepAnalyze(place);
+    const p = places.find((x) => x.id === place.id) || place;
+    Object.assign(p, result);
+    updateMarker(p);
+    updateListRow(p, isFav);
+    openDetail(p);
+  } catch (e) {
+    if (e.code === 401) {
+      await ensureAuth();
+      return runDeepAnalysis(place);
+    }
+    toast("정밀 분석에 실패했어요 — 다시 시도해보세요");
+    openDetail(place);
+  }
 }
 
 async function toggleFav(place) {

@@ -1,4 +1,5 @@
 import { handleAnalyze } from "./analyze.js";
+import { handleDeepAnalyze } from "./deep.js";
 import { getFavorites, putFavorites } from "./favorites.js";
 
 export { LlmRelay } from "./llmRelay.js";
@@ -39,6 +40,10 @@ export default {
       if (url.pathname === "/api/analyze" && request.method === "POST") {
         const body = await request.json();
         return json(await handleAnalyze(body, env), 200, cors);
+      }
+      if (url.pathname === "/api/deep" && request.method === "POST") {
+        const body = await request.json();
+        return json(await handleDeepAnalyze(body, env), 200, cors);
       }
       if (url.pathname === "/api/favorites" && request.method === "GET") {
         return json(await getFavorites(env), 200, cors);
