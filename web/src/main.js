@@ -194,7 +194,7 @@ async function runAnalysis(targets) {
   lastTargets = targets;
   setAnalyzeStatus("analyzing", `⏳ 블로그 후기 분석중… (${targets.length}곳, 5~15초)`);
   try {
-    const { results } = await analyzePlaces(
+    const { results, limited } = await analyzePlaces(
       targets.map((p) => ({ id: p.id, name: p.name, region: p.region })),
     );
     for (const p of places) {
@@ -210,7 +210,11 @@ async function runAnalysis(targets) {
       const p = places.find((x) => x.id === detail.dataset.id);
       if (p) openDetail(p);
     }
-    setAnalyzeStatus("done", "✅ 분석 완료 — 찐점수순으로 정렬해보세요");
+    if (limited) {
+      setAnalyzeStatus("error", "⚠️ 오늘 분석 한도에 도달했어요 — 내일 자동 초기화");
+    } else {
+      setAnalyzeStatus("done", "✅ 분석 완료 — 찐점수순으로 정렬해보세요");
+    }
   } catch (e) {
     if (e.code === 401) {
       setAnalyzeStatus(null);
@@ -246,7 +250,13 @@ function openDetail(place) {
 
 async function runDeepAnalysis(place) {
   try {
-    const { result } = await deepAnalyze(place);
+    const resp = await deepAnalyze(place);
+    if (resp.limited) {
+      toast("오늘 분석 한도에 도달했어요 — 내일 다시 시도해주세요");
+      openDetail(place);
+      return;
+    }
+    const { result } = resp;
     const p = places.find((x) => x.id === place.id) || place;
     Object.assign(p, result);
     updateMarker(p);

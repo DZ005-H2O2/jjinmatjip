@@ -1,5 +1,6 @@
 import { searchBlogs } from "./naver.js";
 import { getCached, putCached } from "./cache.js";
+import { takeLlmBudget } from "./limits.js";
 import { mockResult } from "./mock.js";
 
 const MODEL = "claude-haiku-4-5";
@@ -109,6 +110,11 @@ export async function handleAnalyze(body, env) {
   }
 
   if (!misses.length) return { results, cached, analyzed };
+
+  // 일일 분석 상한 — 초과 시 캐시된 결과만 반환 (비밀번호 유출 시 피해 캡)
+  if (!(await takeLlmBudget(env))) {
+    return { results, cached, analyzed, limited: true };
+  }
 
   // 2. 네이버 블로그 검색 (병렬)
   const withPosts = await Promise.all(

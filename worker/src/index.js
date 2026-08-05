@@ -1,6 +1,7 @@
 import { handleAnalyze } from "./analyze.js";
 import { handleDeepAnalyze } from "./deep.js";
 import { getFavorites, putFavorites } from "./favorites.js";
+import { authGate } from "./limits.js";
 
 export { LlmRelay } from "./llmRelay.js";
 
@@ -31,8 +32,13 @@ export default {
 
     const url = new URL(request.url);
 
-    // 공유 비밀번호 검증
-    if (request.headers.get("X-App-Password") !== env.APP_PASSWORD) {
+    // 공유 비밀번호 검증 (+실패 IP 잠금)
+    const ip = request.headers.get("CF-Connecting-IP") || "unknown";
+    const gate = await authGate(env, ip, request.headers.get("X-App-Password"));
+    if (gate === "locked") {
+      return json({ error: "locked", message: "시도가 너무 많아요. 1시간 뒤 다시 해주세요." }, 429, cors);
+    }
+    if (gate === "wrong") {
       return json({ error: "unauthorized" }, 401, cors);
     }
 

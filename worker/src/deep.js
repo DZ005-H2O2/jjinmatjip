@@ -5,6 +5,7 @@
 // 없이도 잡히는 결정적 신호(광고 확정)다. 텍스트 공지 문구도 마찬가지.
 import { searchBlogs } from "./naver.js";
 import { getCached, putCached } from "./cache.js";
+import { takeLlmBudget } from "./limits.js";
 
 // 체험단/리뷰 캠페인 플랫폼 흔적 (이미지 src·본문 링크에서 탐지)
 const SPONSOR_PLATFORMS = [
@@ -155,6 +156,9 @@ export async function handleDeepAnalyze(body, env) {
 
   const cached = await getCached(env, place.id);
   if (cached?.source === "fulltext") return { result: cached, cached: true };
+
+  // 일일 분석 상한
+  if (!(await takeLlmBudget(env))) return { limited: true };
 
   const posts = await searchBlogs(place, env);
   if (!posts.length) {
